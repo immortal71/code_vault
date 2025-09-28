@@ -1,0 +1,614 @@
+# Code Snippet Manager - Complete Development Prompt for Replit
+
+## Project Overview
+Build a modern, AI-powered code snippet manager web application that helps developers save, organize, search, and share code snippets with intelligent features. Think GitHub Gist meets Notion meets modern AI - beautiful, functional, and developer-focused.
+
+## Tech Stack Requirements
+
+### Frontend Stack
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development
+- **Styling**: Tailwind CSS + shadcn/ui component library
+- **State Management**: Zustand for global state
+- **Code Editor**: Monaco Editor (VS Code in browser)
+- **Icons**: Lucide React icons
+- **Animations**: Framer Motion for smooth interactions
+- **Toast Notifications**: react-hot-toast
+- **Forms**: React Hook Form + Zod validation
+- **Routing**: React Router v6
+
+### Backend Stack
+- **Runtime**: Node.js with Express
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT with bcrypt for password hashing
+- **File Upload**: Multer for handling file uploads
+- **CORS**: Enable for frontend-backend communication
+- **Environment**: dotenv for environment variables
+- **Validation**: Zod for API request validation
+
+### AI Integration
+- **OpenAI API**: For code analysis, auto-tagging, and semantic search
+- **Vector Storage**: Simple in-memory vector storage for MVP (can upgrade later)
+
+## Project Structure
+
+```
+code-snippet-manager/
+├── client/                     # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/             # shadcn/ui components
+│   │   │   ├── layout/
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   ├── Header.tsx
+│   │   │   │   └── Layout.tsx
+│   │   │   ├── snippet/
+│   │   │   │   ├── SnippetEditor.tsx
+│   │   │   │   ├── SnippetCard.tsx
+│   │   │   │   ├── SnippetList.tsx
+│   │   │   │   └── SnippetViewer.tsx
+│   │   │   ├── search/
+│   │   │   │   ├── SearchBar.tsx
+│   │   │   │   ├── FilterPanel.tsx
+│   │   │   │   └── SearchResults.tsx
+│   │   │   ├── collections/
+│   │   │   │   ├── CollectionCard.tsx
+│   │   │   │   ├── CollectionModal.tsx
+│   │   │   │   └── CollectionSidebar.tsx
+│   │   │   └── common/
+│   │   │       ├── LoadingSpinner.tsx
+│   │   │       ├── EmptyState.tsx
+│   │   │       └── ErrorBoundary.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── MySnippets.tsx
+│   │   │   ├── Collections.tsx
+│   │   │   ├── Search.tsx
+│   │   │   ├── Settings.tsx
+│   │   │   ├── Login.tsx
+│   │   │   └── Register.tsx
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   ├── useSnippets.ts
+│   │   │   ├── useSearch.ts
+│   │   │   └── useLocalStorage.ts
+│   │   ├── store/
+│   │   │   ├── authStore.ts
+│   │   │   ├── snippetStore.ts
+│   │   │   └── uiStore.ts
+│   │   ├── services/
+│   │   │   ├── api.ts
+│   │   │   ├── auth.ts
+│   │   │   └── snippets.ts
+│   │   ├── utils/
+│   │   │   ├── constants.ts
+│   │   │   ├── helpers.ts
+│   │   │   └── validators.ts
+│   │   ├── types/
+│   │   │   ├── auth.ts
+│   │   │   ├── snippet.ts
+│   │   │   └── api.ts
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── index.html
+├── server/                     # Node.js backend
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js
+│   │   │   ├── snippets.js
+│   │   │   ├── collections.js
+│   │   │   ├── search.js
+│   │   │   └── ai.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Snippet.js
+│   │   │   └── Collection.js
+│   │   ├── middleware/
+│   │   │   ├── auth.js
+│   │   │   ├── validation.js
+│   │   │   └── errorHandler.js
+│   │   ├── services/
+│   │   │   ├── aiService.js
+│   │   │   ├── searchService.js
+│   │   │   └── vectorService.js
+│   │   ├── utils/
+│   │   │   ├── database.js
+│   │   │   ├── helpers.js
+│   │   │   └── constants.js
+│   │   ├── config/
+│   │   │   └── database.js
+│   │   └── server.js
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── package.json
+│   └── .env.example
+├── .replit
+├── replit.nix
+└── README.md
+```
+
+## UI/UX Design Requirements
+
+### Design Inspiration & Style
+- **Primary Inspiration**: Take cues from Linear, Raycast, Arc Browser, and GitHub's modern UI
+- **Color Scheme**: Dark mode primary with light mode support
+- **Design System**: Clean, minimal, developer-focused
+- **Typography**: Inter font family for excellent readability
+- **Spacing**: Consistent 8px grid system
+- **Animations**: Subtle, purposeful micro-interactions
+
+### Specific UI Components Needed
+
+#### 1. **Main Layout**
+- **Sidebar Navigation**: 
+  - Fixed left sidebar (240px wide)
+  - Icons + labels for: Dashboard, My Snippets, Collections, Search, Settings
+  - Collapsible on mobile
+  - Active state indicators with subtle background highlights
+  - User avatar and name at bottom
+
+- **Header**:
+  - Search bar (prominent, centered, with cmd+k shortcut hint)
+  - "New Snippet" button (primary CTA)
+  - User menu dropdown
+  - Dark/light theme toggle
+
+#### 2. **Snippet Components**
+
+- **Snippet Card** (for grid/list views):
+  - Language badge with color coding
+  - Title (truncated if long)
+  - Description preview (2 lines max)
+  - Tags as small pills
+  - Date created/modified
+  - Favorite/star button
+  - Quick action buttons (copy, edit, delete) on hover
+  - Syntax highlighted code preview (first 3-4 lines)
+
+- **Snippet Editor Modal/Page**:
+  - Full-screen Monaco Editor with theme matching
+  - Language selector dropdown (with auto-detection)
+  - Title input field
+  - Description textarea
+  - Tags input with autocomplete
+  - Collection selector
+  - Privacy toggle (private/public)
+  - Save/Cancel buttons
+  - Live syntax highlighting
+  - Line numbers
+  - Minimap for long code
+
+#### 3. **Search Interface**
+
+- **Search Bar**:
+  - Large, prominent search input
+  - Placeholder: "Search snippets by description, tags, or code content..."
+  - Recent searches dropdown
+  - Search suggestions as you type
+  - Advanced filters toggle
+
+- **Filter Panel**:
+  - Language filters (checkboxes with counts)
+  - Date range picker
+  - Tags filter (with popular tags)
+  - Collection filter
+  - Sort options (recent, popular, name)
+
+- **Search Results**:
+  - Snippet cards with search term highlighting
+  - "No results" empty state with suggestions
+  - Load more pagination
+
+#### 4. **Collections Interface**
+
+- **Collection Cards**:
+  - Collection name and description
+  - Snippet count
+  - Preview of first few snippets
+  - Edit/delete options
+  - Color-coded categories
+
+- **Collection Detail View**:
+  - Header with collection info
+  - Snippet grid/list toggle
+  - Add snippets to collection
+  - Bulk actions
+
+#### 5. **Dashboard**
+
+- **Stats Cards**:
+  - Total snippets count
+  - Languages used (pie chart)
+  - Recent activity
+  - Most used snippets
+
+- **Quick Access**:
+  - Recently viewed snippets
+  - Frequently used snippets
+  - Recent searches
+
+### Color Palette
+```css
+/* Dark Theme (Primary) */
+--background: 0 0% 3.9%
+--foreground: 0 0% 98%
+--card: 0 0% 7%
+--card-foreground: 0 0% 98%
+--popover: 0 0% 7%
+--popover-foreground: 0 0% 98%
+--primary: 142.1 76.2% 36.3%
+--primary-foreground: 355.7 100% 97.3%
+--secondary: 240 3.7% 15.9%
+--secondary-foreground: 0 0% 98%
+--muted: 240 3.7% 15.9%
+--muted-foreground: 240 5% 64.9%
+--accent: 240 3.7% 15.9%
+--accent-foreground: 0 0% 98%
+--destructive: 0 84.2% 60.2%
+--destructive-foreground: 0 0% 98%
+--border: 240 3.7% 15.9%
+--input: 240 3.7% 15.9%
+--ring: 142.1 76.2% 36.3%
+```
+
+## Core Features Implementation
+
+### 1. **Authentication System**
+- User registration/login with email + password
+- JWT tokens for session management
+- Password reset functionality
+- User profile management
+- Protected routes on frontend
+
+### 2. **Snippet Management**
+- CRUD operations for snippets
+- Auto-save drafts every 30 seconds
+- Version history (basic - store previous version)
+- Duplicate snippet functionality
+- Bulk operations (delete multiple, move to collection)
+- Export snippets (single or bulk)
+
+### 3. **AI-Powered Features**
+- **Auto-tagging**: Analyze code and suggest relevant tags
+- **Smart descriptions**: Generate descriptions from code
+- **Language detection**: Auto-detect programming language
+- **Code explanation**: Generate comments explaining what code does
+- **Similar snippets**: Find related snippets when viewing one
+
+### 4. **Search & Discovery**
+- Text search in titles, descriptions, and code content
+- Tag-based filtering
+- Language-based filtering
+- Date range filtering
+- Fuzzy search for typos
+- Search history
+- Saved searches
+
+### 5. **Collections & Organization**
+- Create/edit/delete collections
+- Add/remove snippets from collections
+- Smart collections based on rules (auto-updating)
+- Collection sharing (public collections)
+- Nested collections support
+
+### 6. **Code Editor Features**
+- Monaco Editor integration
+- Syntax highlighting for 50+ languages
+- Code folding
+- Find/replace functionality
+- Multiple themes
+- Auto-completion
+- Error detection for popular languages
+
+## Database Schema (Prisma)
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  snippets    Snippet[]
+  collections Collection[]
+  
+  @@map("users")
+}
+
+model Snippet {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  code        String
+  language    String
+  tags        String[]
+  isPublic    Boolean  @default(false)
+  isFavorite  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  collections CollectionSnippet[]
+  
+  @@map("snippets")
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#3B82F6")
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  snippets CollectionSnippet[]
+  
+  @@map("collections")
+}
+
+model CollectionSnippet {
+  id String @id @default(cuid())
+  
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  
+  snippetId String
+  snippet   Snippet @relation(fields: [snippetId], references: [id], onDelete: Cascade)
+  
+  addedAt DateTime @default(now())
+  
+  @@unique([collectionId, snippetId])
+  @@map("collection_snippets")
+}
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user
+
+### Snippets
+- `GET /api/snippets` - Get user's snippets (with pagination, filters)
+- `POST /api/snippets` - Create new snippet
+- `GET /api/snippets/:id` - Get specific snippet
+- `PUT /api/snippets/:id` - Update snippet
+- `DELETE /api/snippets/:id` - Delete snippet
+- `POST /api/snippets/:id/favorite` - Toggle favorite status
+
+### Collections
+- `GET /api/collections` - Get user's collections
+- `POST /api/collections` - Create new collection
+- `PUT /api/collections/:id` - Update collection
+- `DELETE /api/collections/:id` - Delete collection
+- `POST /api/collections/:id/snippets/:snippetId` - Add snippet to collection
+- `DELETE /api/collections/:id/snippets/:snippetId` - Remove snippet from collection
+
+### Search
+- `GET /api/search?q={query}&lang={language}&tags={tags}` - Search snippets
+
+### AI Features
+- `POST /api/ai/analyze` - Analyze code and return tags/description
+- `POST /api/ai/explain` - Explain what code does
+- `GET /api/ai/similar/:snippetId` - Find similar snippets
+
+## Key Features to Implement
+
+### Phase 1 - Core MVP (Week 1-2)
+1. User authentication (register, login, JWT)
+2. Basic snippet CRUD operations
+3. Monaco Editor integration
+4. Simple search functionality
+5. Basic responsive layout
+
+### Phase 2 - Enhanced UX (Week 3)
+1. Collections system
+2. Advanced search with filters
+3. Favorite snippets
+4. Tags system
+5. Better UI polish and animations
+
+### Phase 3 - AI Integration (Week 4)
+1. OpenAI integration for code analysis
+2. Auto-tagging functionality
+3. Smart descriptions
+4. Language detection
+5. Code explanation features
+
+## Replit-Specific Configuration
+
+### .replit file
+```toml
+modules = ["nodejs-20", "web"]
+hidden = [".config", "package-lock.json"]
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
+
+[nix]
+channel = "stable-24_05"
+
+[unitTest]
+language = "nodejs"
+
+[deployment]
+run = ["sh", "-c", "cd server && npm run start"]
+deploymentTarget = "cloudrun"
+ignorePorts = false
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 8080
+```
+
+### replit.nix file
+```nix
+{pkgs}: {
+  deps = [
+    pkgs.nodejs_20
+    pkgs.nodePackages.npm
+    pkgs.nodePackages.prisma
+  ];
+}
+```
+
+## Environment Variables
+Create `.env` file in server directory:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/snippetmanager"
+JWT_SECRET="your-super-secret-jwt-key-here"
+OPENAI_API_KEY="your-openai-api-key-here"
+NODE_ENV="development"
+PORT=3000
+```
+
+## Package.json Files
+
+### Client package.json
+```json
+{
+  "name": "snippet-manager-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "zustand": "^4.4.0",
+    "@monaco-editor/react": "^4.6.0",
+    "framer-motion": "^10.16.0",
+    "react-hot-toast": "^2.4.0",
+    "react-hook-form": "^7.48.0",
+    "zod": "^3.22.0",
+    "@hookform/resolvers": "^3.3.0",
+    "lucide-react": "^0.290.0",
+    "date-fns": "^2.30.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "@vitejs/plugin-react": "^4.1.0",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31"
+  }
+}
+```
+
+### Server package.json
+```json
+{
+  "name": "snippet-manager-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.3.0",
+    "zod": "^3.22.0",
+    "multer": "^1.4.5-lts.1",
+    "@prisma/client": "^5.6.0",
+    "openai": "^4.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "prisma": "^5.6.0"
+  }
+}
+```
+
+## Development Guidelines
+
+### Code Quality Standards
+- Use TypeScript strictly - no `any` types
+- Implement proper error handling everywhere
+- Add loading states for all async operations
+- Use proper TypeScript interfaces/types
+- Follow React best practices (hooks, functional components)
+- Implement proper form validation
+- Add proper error boundaries
+
+### Performance Considerations
+- Implement virtual scrolling for large snippet lists
+- Lazy load Monaco Editor
+- Debounce search input (300ms)
+- Implement proper caching for API calls
+- Use React.memo for expensive components
+- Implement code splitting for routes
+
+### Security Requirements
+- Validate all inputs on both client and server
+- Sanitize code content before storing
+- Implement rate limiting on API endpoints
+- Use HTTPS in production
+- Validate JWT tokens properly
+- Implement CORS properly
+
+### Testing Requirements
+- Add basic unit tests for utility functions
+- Test API endpoints with proper error cases
+- Test authentication flows
+- Test snippet CRUD operations
+- Add integration tests for search functionality
+
+## Success Metrics & KPIs
+- User registration and retention rates
+- Snippets created per user per day
+- Search usage and success rates
+- Time spent in the application
+- Feature adoption rates (collections, AI features)
+
+This prompt provides everything needed to build a production-ready code snippet manager. Focus on getting the core MVP working first, then gradually add the advanced features. The UI should feel modern, fast, and developer-focused - prioritize excellent UX over feature complexity initially.

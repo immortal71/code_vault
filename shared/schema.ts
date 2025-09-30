@@ -7,6 +7,9 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  refreshTokenHash: text("refresh_token_hash"), // Hashed refresh token for JWT rotation
+  refreshTokenJti: text("refresh_token_jti"), // JWT ID for token revocation
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"), // Expiry timestamp for cleanup
 });
 
 export const snippets = pgTable("snippets", {

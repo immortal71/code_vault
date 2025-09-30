@@ -39,7 +39,7 @@ export default async function handler(
       throw unauthorized('User not found');
     }
 
-    res.status(200).json({ user });
+    res.status(200).json(user);
   } catch (error) {
     handleError(res, error);
   }

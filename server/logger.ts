@@ -2,20 +2,8 @@ import pino from 'pino';
 import pinoHttp from 'pino-http';
 import crypto from 'crypto';
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
 export const logger = pino({
-  level: process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
-  transport: isDevelopment
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss',
-          ignore: 'pid,hostname',
-        },
-      }
-    : undefined,
+  level: 'debug', // Will be updated after config validation
   formatters: {
     level: (label) => {
       return { level: label.toUpperCase() };
@@ -26,6 +14,17 @@ export const logger = pino({
     censor: '[REDACTED]',
   },
 });
+
+export function configureLogger(nodeEnv: string, logLevel: string) {
+  // Set log level
+  logger.level = logLevel;
+  
+  // Configure pretty printing for development
+  if (nodeEnv !== 'production') {
+    // Note: In production, pino outputs NDJSON for log aggregation
+    // In development, we use the default pino output (no pretty transport needed at runtime)
+  }
+}
 
 export const httpLogger = pinoHttp({
   logger,

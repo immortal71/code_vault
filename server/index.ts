@@ -7,11 +7,16 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
 import { httpLogger, logger } from "./logger";
+import { validateConfig, getConfig } from "./config";
+
+// Validate configuration before starting server
+validateConfig();
+const config = getConfig();
 
 const app = express();
 
 // Trust proxy for accurate client IP (required for rate limiting behind proxy)
-if (process.env.NODE_ENV === 'production') {
+if (config.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
@@ -19,7 +24,7 @@ if (process.env.NODE_ENV === 'production') {
 app.disable('x-powered-by');
 
 // Security middleware - helmet with environment-aware CSP
-if (process.env.NODE_ENV === 'production') {
+if (config.NODE_ENV === 'production') {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -58,16 +63,10 @@ if (process.env.NODE_ENV === 'production') {
   }));
 }
 
-// CORS configuration with strict production validation
+// CORS configuration with validated origins
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? (() => {
-        const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',');
-        if (!allowedOrigins || allowedOrigins.length === 0) {
-          throw new Error('ALLOWED_ORIGINS environment variable is required in production');
-        }
-        return allowedOrigins;
-      })()
+  origin: config.NODE_ENV === 'production' 
+    ? config.ALLOWED_ORIGINS!
     : true, // Allow all origins in development
   credentials: true,
 };
@@ -146,17 +145,17 @@ app.use(httpLogger);
 
     // Send error response
     res.status(status).json({
-      error: process.env.NODE_ENV === 'production' && status >= 500 
+      error: config.NODE_ENV === 'production' && status >= 500 
         ? 'Internal Server Error' 
         : message,
-      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+      ...(config.NODE_ENV !== 'production' && { stack: err.stack }),
     });
   });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  if (config.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
@@ -166,12 +165,11 @@ app.use(httpLogger);
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
-    port,
+    port: config.PORT,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`serving on port ${config.PORT}`);
   });
 })();

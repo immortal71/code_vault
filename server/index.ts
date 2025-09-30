@@ -6,6 +6,7 @@ import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
+import { httpLogger, logger } from "./logger";
 
 const app = express();
 
@@ -110,35 +111,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
+// Structured logging with request IDs
+app.use(httpLogger);
 
 (async () => {
   // Setup authentication before routes
@@ -146,12 +120,37 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Centralized error handler
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log error with context
+    if (status >= 500) {
+      logger.error({
+        err,
+        requestId: req.id,
+        userId: (req as any).user?.id,
+        method: req.method,
+        url: req.url,
+      }, 'Server error');
+    } else {
+      logger.warn({
+        err: { message: err.message, status },
+        requestId: req.id,
+        userId: (req as any).user?.id,
+        method: req.method,
+        url: req.url,
+      }, 'Client error');
+    }
+
+    // Send error response
+    res.status(status).json({
+      error: process.env.NODE_ENV === 'production' && status >= 500 
+        ? 'Internal Server Error' 
+        : message,
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+    });
   });
 
   // importantly only setup vite in development and after

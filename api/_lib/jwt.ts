@@ -38,8 +38,9 @@ export function generateAccessToken(payload: TokenPayload): string {
 }
 
 // Generate Refresh Token with JTI
-export function generateRefreshToken(payload: TokenPayload): { token: string; jti: string } {
+export function generateRefreshToken(payload: TokenPayload): { token: string; jti: string; expiresAt: Date } {
   const jti = randomBytes(16).toString('hex');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
   const token = jwt.sign({ ...payload, jti }, REFRESH_TOKEN_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRY,
     algorithm: 'HS256',
@@ -47,7 +48,32 @@ export function generateRefreshToken(payload: TokenPayload): { token: string; jt
     audience: JWT_AUDIENCE,
     subject: payload.userId,
   });
-  return { token, jti };
+  return { token, jti, expiresAt };
+}
+
+// Hash Password using scrypt (for user registration)
+export async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString('hex');
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString('hex')}.${salt}`;
+}
+
+// Compare Password with hash (timing-safe)
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+  try {
+    const parts = hash.split('.');
+    if (parts.length !== 2) return false;
+    
+    const [hashedPassword, salt] = parts;
+    const hashedPasswordBuf = Buffer.from(hashedPassword, 'hex');
+    const suppliedBuf = (await scryptAsync(password, salt, 64)) as Buffer;
+    
+    if (hashedPasswordBuf.length !== suppliedBuf.length) return false;
+    
+    return timingSafeEqual(hashedPasswordBuf, suppliedBuf);
+  } catch (error) {
+    return false;
+  }
 }
 
 // Verify Access Token

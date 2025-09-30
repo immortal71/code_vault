@@ -77,7 +77,6 @@ export function SnippetCard({
     setIsAnimating(true)
     setTimeout(() => setIsAnimating(false), 300)
     onToggleFavorite?.(id)
-    console.log('Toggle favorite:', id)
   }
 
   const handleCopy = (e?: React.MouseEvent) => {
@@ -89,7 +88,6 @@ export function SnippetCard({
       duration: 2000,
     })
     onCopy?.(code)
-    console.log('Copied snippet:', id)
   }
 
   const getDaysAgo = (date: string) => {

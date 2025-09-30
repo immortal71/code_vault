@@ -37,7 +37,6 @@ export function LanguageChart({ data, onLanguageClick }: LanguageChartProps) {
   
   const handleClick = (entry: LanguageData) => {
     onLanguageClick?.(entry.name)
-    console.log('Filter by language:', entry.name)
   }
 
   const handleLegendClick = (entry: any) => {

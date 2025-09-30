@@ -19,7 +19,7 @@ export function StatsCard({ title, value, description, icon: Icon, trend, onClic
       data-testid={`card-stats-${title.toLowerCase().replace(' ', '-')}`}
       className={`transition-all duration-200 ${
         onClick 
-          ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg active:scale-[0.98]' 
+          ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2' 
           : ''
       }`}
       onClick={onClick}
@@ -35,7 +35,7 @@ export function StatsCard({ title, value, description, icon: Icon, trend, onClic
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold" data-testid={`text-stats-value-${title.toLowerCase().replace(' ', '-')}`}>
@@ -53,9 +53,9 @@ export function StatsCard({ title, value, description, icon: Icon, trend, onClic
               : 'text-red-600 dark:text-red-500'
           }`}>
             {trend.isPositive ? (
-              <TrendingUp className="h-3 w-3" />
+              <TrendingUp className="h-3 w-3" aria-hidden="true" />
             ) : (
-              <TrendingDown className="h-3 w-3" />
+              <TrendingDown className="h-3 w-3" aria-hidden="true" />
             )}
             <span>{Math.abs(trend.value)}% from last month</span>
           </div>

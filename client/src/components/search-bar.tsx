@@ -118,7 +118,7 @@ export function SearchBar({
   return (
     <div className={`relative ${className}`}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" aria-hidden="true" />
         <Input
           ref={inputRef}
           type="search"
@@ -176,7 +176,7 @@ export function SearchBar({
                   variant="ghost" 
                   size="sm" 
                   className="h-6 text-xs"
-                  onClick={() => console.log('Clear recent searches')}
+                  onClick={() => setRecentSearches([])}
                 >
                   Clear
                 </Button>
@@ -190,7 +190,7 @@ export function SearchBar({
                   role="option"
                   aria-selected="false"
                 >
-                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <span className="text-sm">{search}</span>
                 </button>
               ))}
@@ -219,7 +219,7 @@ export function SearchBar({
                           role="option"
                           aria-selected="false"
                         >
-                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{suggestion.title}</p>
                             {suggestion.subtitle && (

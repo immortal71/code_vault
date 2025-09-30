@@ -1,20 +1,37 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser, type Snippet, type InsertSnippet, type Collection, type InsertCollection } from "@shared/schema";
 import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
-
 export interface IStorage {
+  // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Snippet methods
+  getSnippet(id: string): Promise<Snippet | undefined>;
+  getSnippetsByUserId(userId: string): Promise<Snippet[]>;
+  createSnippet(snippet: InsertSnippet): Promise<Snippet>;
+  updateSnippet(id: string, snippet: Partial<Snippet>): Promise<Snippet | undefined>;
+  deleteSnippet(id: string): Promise<boolean>;
+  searchSnippets(userId: string, query: string): Promise<Snippet[]>;
+  
+  // Collection methods
+  getCollection(id: string): Promise<Collection | undefined>;
+  getCollectionsByUserId(userId: string): Promise<Collection[]>;
+  createCollection(collection: InsertCollection): Promise<Collection>;
+  updateCollection(id: string, collection: Partial<Collection>): Promise<Collection | undefined>;
+  deleteCollection(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private snippets: Map<string, Snippet>;
+  private collections: Map<string, Collection>;
 
   constructor() {
     this.users = new Map();
+    this.snippets = new Map();
+    this.collections = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -32,6 +49,114 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async getSnippet(id: string): Promise<Snippet | undefined> {
+    return this.snippets.get(id);
+  }
+
+  async getSnippetsByUserId(userId: string): Promise<Snippet[]> {
+    return Array.from(this.snippets.values())
+      .filter(snippet => snippet.userId === userId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async createSnippet(insertSnippet: InsertSnippet): Promise<Snippet> {
+    const id = randomUUID();
+    const now = new Date();
+    const snippet: Snippet = { 
+      id,
+      userId: insertSnippet.userId,
+      title: insertSnippet.title,
+      description: insertSnippet.description ?? null,
+      code: insertSnippet.code,
+      language: insertSnippet.language,
+      tags: insertSnippet.tags ?? null,
+      embedding: insertSnippet.embedding ?? null,
+      framework: insertSnippet.framework ?? null,
+      complexity: insertSnippet.complexity ?? null,
+      isPublic: insertSnippet.isPublic ?? false,
+      isFavorite: insertSnippet.isFavorite ?? false,
+      usageCount: insertSnippet.usageCount ?? 0,
+      lastUsedAt: insertSnippet.lastUsedAt ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.snippets.set(id, snippet);
+    return snippet;
+  }
+
+  async updateSnippet(id: string, updates: Partial<Snippet>): Promise<Snippet | undefined> {
+    const snippet = this.snippets.get(id);
+    if (!snippet) return undefined;
+    
+    const updated: Snippet = { 
+      ...snippet, 
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.snippets.set(id, updated);
+    return updated;
+  }
+
+  async deleteSnippet(id: string): Promise<boolean> {
+    return this.snippets.delete(id);
+  }
+
+  async searchSnippets(userId: string, query: string): Promise<Snippet[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.snippets.values())
+      .filter(snippet => 
+        snippet.userId === userId && (
+          snippet.title.toLowerCase().includes(lowerQuery) ||
+          snippet.description?.toLowerCase().includes(lowerQuery) ||
+          snippet.code.toLowerCase().includes(lowerQuery) ||
+          snippet.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
+        )
+      );
+  }
+
+  async getCollection(id: string): Promise<Collection | undefined> {
+    return this.collections.get(id);
+  }
+
+  async getCollectionsByUserId(userId: string): Promise<Collection[]> {
+    return Array.from(this.collections.values())
+      .filter(collection => collection.userId === userId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+  }
+
+  async createCollection(insertCollection: InsertCollection): Promise<Collection> {
+    const id = randomUUID();
+    const now = new Date();
+    const collection: Collection = { 
+      id,
+      userId: insertCollection.userId,
+      name: insertCollection.name,
+      description: insertCollection.description ?? null,
+      color: insertCollection.color ?? null,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.collections.set(id, collection);
+    return collection;
+  }
+
+  async updateCollection(id: string, updates: Partial<Collection>): Promise<Collection | undefined> {
+    const collection = this.collections.get(id);
+    if (!collection) return undefined;
+    
+    const updated: Collection = { 
+      ...collection, 
+      ...updates,
+      updatedAt: new Date()
+    };
+    this.collections.set(id, updated);
+    return updated;
+  }
+
+  async deleteCollection(id: string): Promise<boolean> {
+    return this.collections.delete(id);
   }
 }
 

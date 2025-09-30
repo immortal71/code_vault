@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useTheme } from "@/components/theme-provider"
+import { AiTagSuggestions } from "@/components/ai-tag-suggestions"
 
 interface SnippetEditorProps {
   isOpen: boolean
@@ -105,10 +106,14 @@ export function SnippetEditor({ isOpen, onClose, onSave, snippet }: SnippetEdito
     onClose()
   }
 
-  const handleAiGenerate = () => {
-    // Simulate AI-generated description
-    console.log('AI generate description triggered')
-    setDescription(`Auto-generated description for ${language} code snippet`)
+  const handleTagsSelected = (newTags: string[]) => {
+    setTags(prev => [...prev, ...newTags.filter(tag => !prev.includes(tag))])
+  }
+
+  const handleDescriptionGenerated = (desc: string) => {
+    if (!description.trim()) {
+      setDescription(desc)
+    }
   }
 
   return (
@@ -172,19 +177,7 @@ export function SnippetEditor({ isOpen, onClose, onSave, snippet }: SnippetEdito
             </div>
             
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Label htmlFor="description">Description</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleAiGenerate}
-                  className="h-6 px-2"
-                  data-testid="button-ai-generate"
-                >
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  AI
-                </Button>
-              </div>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -194,6 +187,13 @@ export function SnippetEditor({ isOpen, onClose, onSave, snippet }: SnippetEdito
                 data-testid="textarea-description"
               />
             </div>
+            
+            <AiTagSuggestions
+              code={code}
+              language={language}
+              onTagsSelected={handleTagsSelected}
+              onDescriptionGenerated={handleDescriptionGenerated}
+            />
             
             <div>
               <Label htmlFor="tags">Tags</Label>
@@ -214,7 +214,7 @@ export function SnippetEditor({ isOpen, onClose, onSave, snippet }: SnippetEdito
                       className="ml-1 hover:text-destructive"
                       data-testid={`button-remove-tag-${tag}`}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3 w-3" aria-hidden="true" />
                     </button>
                   </Badge>
                 ))}

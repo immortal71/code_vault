@@ -5,6 +5,7 @@ import { LanguageChart } from "@/components/language-chart"
 import { SnippetCard } from "@/components/snippet-card"
 import { EmptyState } from "@/components/empty-state"
 import { Code2, BookOpen, Star, TrendingUp, Plus, Copy, ExternalLink, Edit, Clock } from "lucide-react"
+import { SiReact, SiPython, SiJavascript, SiTypescript, SiGo, SiRust, SiCplusplus, SiPhp, SiSharp, SiHtml5, SiCss3 } from "react-icons/si"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -156,6 +157,49 @@ export default function Dashboard() {
     return `${days} days ago`
   }
 
+  const getLanguageIcon = (language: string) => {
+    const lang = language.toLowerCase()
+    const iconProps = { className: "h-5 w-5", style: { flexShrink: 0 } }
+    
+    switch (lang) {
+      case 'react':
+      case 'jsx':
+        return <SiReact {...iconProps} color="#61DAFB" />
+      case 'typescript':
+      case 'ts':
+      case 'tsx':
+        return <SiTypescript {...iconProps} color="#3178C6" />
+      case 'javascript':
+      case 'js':
+        return <SiJavascript {...iconProps} color="#F7DF1E" />
+      case 'python':
+      case 'py':
+        return <SiPython {...iconProps} color="#3776AB" />
+      case 'go':
+      case 'golang':
+        return <SiGo {...iconProps} color="#00ADD8" />
+      case 'java':
+        return <Code2 {...iconProps} className="h-5 w-5" style={{ color: '#ED8B00' }} />
+      case 'rust':
+      case 'rs':
+        return <SiRust {...iconProps} color="#CE422B" />
+      case 'cpp':
+      case 'c++':
+        return <SiCplusplus {...iconProps} color="#00599C" />
+      case 'php':
+        return <SiPhp {...iconProps} color="#777BB4" />
+      case 'csharp':
+      case 'c#':
+        return <SiSharp {...iconProps} color="#239120" />
+      case 'html':
+        return <SiHtml5 {...iconProps} color="#E34F26" />
+      case 'css':
+        return <SiCss3 {...iconProps} color="#1572B6" />
+      default:
+        return <Code2 {...iconProps} className="h-5 w-5 text-muted-foreground" />
+    }
+  }
+
   return (
     <div className="space-y-6" data-testid="page-dashboard">
       {/* Header */}
@@ -258,7 +302,10 @@ export default function Dashboard() {
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{snippet.title}</p>
+                        <div className="flex items-center gap-2">
+                          {getLanguageIcon(snippet.language)}
+                          <p className="text-sm font-medium truncate">{snippet.title}</p>
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-muted-foreground">{snippet.language}</span>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -329,8 +376,9 @@ export default function Dashboard() {
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                          {getLanguageIcon(snippet.language)}
                           <p className="text-sm font-medium truncate">{snippet.title}</p>
+                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-muted-foreground">{snippet.language}</span>

@@ -1,0 +1,88 @@
+You are making 5 critical UI improvements to the Code Snippet Manager. The app is built with React, TypeScript, Tailwind CSS, and shadcn/ui. Focus ONLY on these 5 high-impact changes:
+
+## 1. MAKE DASHBOARD STAT CARDS INTERACTIVE
+
+Location: Dashboard page - the 4 cards at top (Total Snippets, Collections, Favorites, Languages)
+
+Make each card:
+- Clickable with onClick navigation:
+  * Total Snippets → navigate to /snippets
+  * Collections → navigate to /collections  
+  * Favorites → navigate to /snippets with favorites filter
+  * Languages → navigate to /snippets with language filter
+- Add hover effects:
+  * className="transition-all duration-200 hover:-translate-y-1 hover:shadow-xl cursor-pointer active:scale-95"
+- Replace text trend indicators with actual icons:
+  * Import TrendingUp, TrendingDown from lucide-react
+  * Green TrendingUp icon for positive trends
+  * Red TrendingDown icon for negative trends
+  * Remove the arrow text symbols (↗)
+
+## 2. ADD KEYBOARD SHORTCUT BADGE TO SEARCH BAR
+
+Location: Header search input (currently centered)
+
+Add a visible keyboard shortcut indicator:
+- Position: absolute right-3 in the search input
+- Show "⌘K" on Mac, "Ctrl K" on Windows
+- Style: px-2 py-1 text-xs bg-muted border border-border rounded text-muted-foreground
+- Should fade out when search input is focused (opacity-0 when focused)
+- Implement actual keyboard shortcut listener:
+  * useEffect with keydown listener
+  * Check for (e.metaKey || e.ctrlKey) && e.key === 'k'
+  * e.preventDefault() and focus the search input
+
+## 3. ADD HOVER EFFECTS TO SNIPPET CARDS
+
+Location: My Snippets page - all snippet cards in grid/list view
+
+For each snippet card:
+- Add hover transform and shadow:
+  * className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+- Add "Copy Code" button that appears on hover:
+  * Position: absolute top-2 right-2
+  * Icon: Copy from lucide-react
+  * className="opacity-0 group-hover:opacity-100 transition-opacity"
+  * Parent card needs: className="group relative"
+  * onClick should copy snippet.code to clipboard and show toast "Code copied!"
+- Ensure smooth transitions on all interactive elements
+
+## 4. MAKE PIE CHART SEGMENTS CLICKABLE
+
+Location: Dashboard page - Language Distribution pie chart
+
+Make the chart interactive:
+- Each segment should be clickable to filter snippets by that language
+- Add onClick handler to Pie component (if using Recharts):
+  * onClick={(data) => navigate(`/snippets?lang=${data.name.toLowerCase()}`)}
+- Add cursor-pointer class to segments
+- On hover: increase segment size slightly (activeShape with outerRadius + 5)
+- Enhanced tooltip showing:
+  * Language name
+  * Count and percentage
+  * "Click to filter" hint text
+
+## 5. ADD LANGUAGE ICONS TO QUICK ACCESS CARDS
+
+Location: Dashboard page - Quick Access section cards
+
+For each snippet card in Quick Access:
+- Add language icon/logo next to title:
+  * Use small 20x20px icons
+  * Position: inline with title text
+  * Icons for: React, Python, JavaScript, TypeScript, Go, Java, Rust
+  * Fallback: generic code icon if language not matched
+- Add colored left border to each card:
+  * border-l-4 with color based on language
+  * TypeScript: blue-500, Python: yellow-500, JavaScript: yellow-400, Go: cyan-500, etc.
+- Ensure icons load from a reliable source (CDN or local assets)
+
+IMPLEMENTATION NOTES:
+- Use lucide-react for all icons (TrendingUp, TrendingDown, Copy, etc.)
+- All transitions should be 200ms ease-in-out
+- Use existing Tailwind classes, don't add custom CSS
+- Ensure all onClick handlers prevent default behavior where needed
+- Add proper TypeScript types for all event handlers
+- Test keyboard shortcut works on both Mac (Cmd) and Windows (Ctrl)
+
+DO NOT change anything else. Keep all existing functionality, layouts, and styling. Only add these 5 specific improvements.

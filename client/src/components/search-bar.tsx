@@ -27,8 +27,6 @@ const mockSuggestions: SearchSuggestion[] = [
   { type: 'tag', title: 'hooks', id: 't2' },
 ]
 
-const recentSearches = ['react hooks', 'python api', 'javascript utils']
-
 export function SearchBar({ 
   placeholder = "Search snippets... ⌘K", 
   onSearch,
@@ -38,6 +36,7 @@ export function SearchBar({
   const [searchQuery, setSearchQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [recentSearches, setRecentSearches] = useState(['react hooks', 'python api', 'javascript utils'])
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 

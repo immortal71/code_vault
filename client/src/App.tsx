@@ -42,16 +42,16 @@ function App() {
             <div className="flex h-screen w-full">
               <AppSidebar />
               <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                  <div className="flex items-center gap-4">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <div className="hidden md:block">
-                      <SearchBar 
-                        placeholder="Search snippets... ⌘K"
-                        className="w-80"
-                      />
-                    </div>
+                <header className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" className="md:hidden" />
+                  
+                  <div className="flex-1 flex justify-center px-4">
+                    <SearchBar 
+                      placeholder="Search snippets... ⌘K"
+                      className="w-full max-w-[500px]"
+                    />
                   </div>
+                  
                   <ThemeToggle />
                 </header>
                 

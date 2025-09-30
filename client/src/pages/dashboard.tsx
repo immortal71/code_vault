@@ -1,9 +1,11 @@
 import { useState } from "react"
+import { useLocation } from "wouter"
 import { StatsCard } from "@/components/stats-card"
 import { LanguageChart } from "@/components/language-chart"
 import { SnippetCard } from "@/components/snippet-card"
 import { EmptyState } from "@/components/empty-state"
-import { Code2, BookOpen, Star, TrendingUp, Plus } from "lucide-react"
+import { Code2, BookOpen, Star, TrendingUp, Plus, Copy, ExternalLink, Edit, Clock } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -116,14 +118,42 @@ const mockLanguageData = [
   { name: 'Java', value: 4, color: '#ED8B00' }
 ]
 
+const languageColors: Record<string, string> = {
+  typescript: "#3178C6",
+  javascript: "#F7DF1E",
+  python: "#3776AB",
+  java: "#ED8B00",
+  go: "#00ADD8",
+  rust: "#CE422B"
+}
+
 export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState<'recent' | 'favorites'>('recent')
+  const [, setLocation] = useLocation()
+  const { toast } = useToast()
+  const [hoveredSnippet, setHoveredSnippet] = useState<string | null>(null)
 
   const recentSnippets = mockSnippets.slice(0, 3)
   const favoriteSnippets = mockSnippets.filter(s => s.isFavorite)
 
   const handleCreateSnippet = () => {
     console.log('Create new snippet clicked')
+  }
+
+  const handleCopyCode = (code: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(code)
+    toast({
+      title: "Code copied!",
+      description: "The code has been copied to your clipboard.",
+    })
+  }
+
+  const getDaysAgo = (date: string) => {
+    const days = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))
+    if (days === 0) return 'Today'
+    if (days === 1) return '1 day ago'
+    return `${days} days ago`
   }
 
   return (
@@ -145,27 +175,30 @@ export default function Dashboard() {
         <StatsCard
           title="Total Snippets"
           value={mockSnippets.length}
-          description="↗ 12% from last month"
           icon={Code2}
           trend={{ value: 12, isPositive: true }}
+          onClick={() => setLocation('/snippets')}
         />
         <StatsCard
           title="Collections"
           value={5}
           description="Organized groups"
           icon={BookOpen}
+          onClick={() => setLocation('/collections')}
         />
         <StatsCard
           title="Favorites"
           value={favoriteSnippets.length}
           description="Most used snippets"
           icon={Star}
+          onClick={() => setLocation('/snippets')}
         />
         <StatsCard
           title="Languages"
           value={mockLanguageData.length}
           description="Different technologies"
           icon={TrendingUp}
+          onClick={() => setLocation('/snippets')}
         />
       </div>
 
@@ -176,7 +209,13 @@ export default function Dashboard() {
             <CardTitle>Language Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <LanguageChart data={mockLanguageData} />
+            <LanguageChart 
+              data={mockLanguageData}
+              onLanguageClick={(language) => {
+                console.log('Navigate to snippets filtered by:', language)
+                setLocation('/snippets')
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -208,13 +247,63 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-3">
               {selectedTab === 'recent' && recentSnippets.map((snippet) => (
-                <div key={snippet.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer">
-                  <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center">
-                    <Code2 className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{snippet.title}</p>
-                    <p className="text-xs text-muted-foreground">{snippet.language}</p>
+                <div 
+                  key={snippet.id} 
+                  className="relative group rounded-md border border-l-4 hover-elevate transition-all duration-200 cursor-pointer"
+                  style={{ borderLeftColor: languageColors[snippet.language.toLowerCase()] || '#888' }}
+                  onMouseEnter={() => setHoveredSnippet(snippet.id)}
+                  onMouseLeave={() => setHoveredSnippet(null)}
+                  onClick={() => setLocation('/snippets')}
+                >
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{snippet.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">{snippet.language}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {getDaysAgo(snippet.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      {hoveredSnippet === snippet.id && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => handleCopyCode(snippet.code, e)}
+                            aria-label="Copy code"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => { e.stopPropagation(); setLocation('/snippets') }}
+                            aria-label="Open snippet"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => { e.stopPropagation(); console.log('Edit:', snippet.id) }}
+                            aria-label="Edit snippet"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-muted/50 rounded-sm p-2 font-mono text-xs overflow-hidden">
+                      <pre className="text-muted-foreground line-clamp-3 whitespace-pre-wrap">
+                        {snippet.code.split('\n').slice(0, 3).join('\n')}
+                      </pre>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -228,13 +317,66 @@ export default function Dashboard() {
               )}
               
               {selectedTab === 'favorites' && favoriteSnippets.map((snippet) => (
-                <div key={snippet.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer">
-                  <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center">
-                    <Star className="h-4 w-4 text-primary fill-current" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{snippet.title}</p>
-                    <p className="text-xs text-muted-foreground">{snippet.language}</p>
+                <div 
+                  key={snippet.id} 
+                  className="relative group rounded-md border border-l-4 hover-elevate transition-all duration-200 cursor-pointer"
+                  style={{ borderLeftColor: languageColors[snippet.language.toLowerCase()] || '#888' }}
+                  onMouseEnter={() => setHoveredSnippet(snippet.id)}
+                  onMouseLeave={() => setHoveredSnippet(null)}
+                  onClick={() => setLocation('/snippets')}
+                >
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                          <p className="text-sm font-medium truncate">{snippet.title}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">{snippet.language}</span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {getDaysAgo(snippet.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      {hoveredSnippet === snippet.id && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => handleCopyCode(snippet.code, e)}
+                            aria-label="Copy code"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => { e.stopPropagation(); setLocation('/snippets') }}
+                            aria-label="Open snippet"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={(e) => { e.stopPropagation(); console.log('Edit:', snippet.id) }}
+                            aria-label="Edit snippet"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-muted/50 rounded-sm p-2 font-mono text-xs overflow-hidden">
+                      <pre className="text-muted-foreground line-clamp-3 whitespace-pre-wrap">
+                        {snippet.code.split('\n').slice(0, 3).join('\n')}
+                      </pre>
+                    </div>
                   </div>
                 </div>
               ))}

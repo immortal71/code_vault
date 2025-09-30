@@ -1,0 +1,113 @@
+You are improving the UI/UX of an existing Code Snippet Manager web application. The app is built with React, TypeScript, Tailwind CSS, and shadcn/ui components. Here are the specific improvements needed:
+
+## DASHBOARD PAGE IMPROVEMENTS
+
+1. **Make Stat Cards Interactive & Clickable**
+   - All 4 dashboard cards (Total Snippets, Collections, Favorites, Languages) should be clickable
+   - Add smooth hover effects: lift card 4px upward, increase shadow, change cursor to pointer
+   - On click: navigate to relevant pages (Total Snippets → /snippets, Collections → /collections, etc.)
+   - Add visual feedback on click with scale animation (0.98 for 100ms)
+   - Replace percentage text with actual trend icons (use Lucide React TrendingUp/TrendingDown icons)
+   - Icons should be green for positive trends, red for negative
+
+2. **Enhance Language Distribution Pie Chart**
+   - Make each pie segment clickable to filter snippets by that language
+   - Add hover effects: highlight segment, show enhanced tooltip with exact count and percentage
+   - Tooltip should show: Language name, snippet count, percentage, and "Click to filter" hint
+   - Add cursor pointer on hover
+   - Make legend items also clickable for filtering
+
+3. **Improve Quick Access Section**
+   - Add syntax-highlighted code preview (3-4 lines) for each snippet
+   - Show quick action buttons on card hover: Copy, Open, Edit buttons in top-right corner
+   - Add language icon/logo next to snippet title (React, Python, JavaScript logos)
+   - Show "Last used: X days ago" below title
+   - Add colored left border to cards based on language
+   - Improve card spacing and padding for better readability
+
+## GLOBAL SEARCH BAR ENHANCEMENT
+
+4. **Redesign Search Bar in Header**
+   - Make it larger (500px width, 44px height) and center it in header
+   - Add prominent keyboard shortcut badge "⌘K" or "Ctrl+K" on right side of input
+   - Implement actual keyboard shortcut functionality (Cmd/Ctrl + K focuses search)
+   - Add search icon on left side of input
+   - Enhanced states: subtle shadow on default, brighter border on hover, primary color border on focus
+   - Add search suggestions dropdown that appears on focus/typing
+   - Show recent searches when clicking empty search bar (with ability to clear individual or all)
+   - Dropdown should show categorized results: Snippets, Collections, Tags
+   - Add "No results" state with helpful message
+   - Clicking outside dropdown closes it
+
+## MY SNIPPETS PAGE IMPROVEMENTS
+
+5. **Enhance Snippet Cards**
+   - Add "Copy Code" button in top-right corner (hidden, shows on hover)
+   - Show toast notification "Code copied!" when copy button clicked
+   - Add usage statistics: "Used 12 times" and "Last used: X days ago"
+   - Improve hover effect: lift 2px, increase border opacity, show action buttons
+   - Increase code preview from 3 to 5 lines with syntax highlighting
+   - Add gradient fade at bottom of code preview if code is longer
+   - Enhance favorite button with animation on click (scale + color change effect)
+   - Add tooltips to all action buttons
+
+6. **Grid/List View Toggle**
+   - Add toggle buttons in top-right (grid icon and list icon)
+   - Grid view: 3 columns on desktop, 2 on tablet, 1 on mobile
+   - List view: full-width cards with more horizontal space
+   - Smooth transition between views
+   - Remember user preference in localStorage
+
+## COLLECTIONS PAGE IMPROVEMENTS
+
+7. **Enhance Collection Cards**
+   - Add collection color picker (show colored left border on cards)
+   - Show preview thumbnails of first 3 snippets in collection
+   - Add snippet count badge in top-right corner
+   - Hover effect: lift card, show "View Collection" button
+   - Add drag-and-drop to reorder collections
+   - Click on collection opens collection detail view
+
+## EMPTY STATES
+
+8. **Add Helpful Empty States**
+   - When no snippets: Large icon, "No snippets yet" message, prominent "Create Your First Snippet" button
+   - When no collections: "Organize your snippets into collections" with example use cases
+   - When no search results: "No results found" with suggestions to try different keywords
+   - When no favorites: "Star your favorite snippets for quick access"
+
+## ANIMATIONS & TRANSITIONS
+
+9. **Add Smooth Micro-interactions**
+   - All hover effects should have 200ms ease-in-out transition
+   - Button clicks should have subtle scale feedback (0.95)
+   - Page transitions should fade smoothly
+   - Loading states should show skeleton loaders, not just spinners
+   - Toast notifications should slide in from top-right corner
+
+## ACCESSIBILITY IMPROVEMENTS
+
+10. **Ensure Keyboard Navigation & A11y**
+    - All interactive elements should have focus states (ring-2 ring-primary)
+    - Add aria-labels to all icon-only buttons
+    - Ensure color contrast meets WCAG AA standards
+    - Keyboard navigation should work: Tab through elements, Enter to activate, Escape to close modals
+
+## RESPONSIVE DESIGN
+
+11. **Mobile Optimization**
+    - Sidebar should collapse to hamburger menu on mobile
+    - Dashboard stat cards should stack vertically on mobile
+    - Search bar should be full-width on mobile
+    - Snippet cards should be single column on mobile
+    - Touch-friendly button sizes (min 44x44px)
+
+## DESIGN SYSTEM CONSISTENCY
+
+- Use consistent spacing (4px, 8px, 16px, 24px, 32px)
+- Maintain color consistency with existing theme
+- Use existing shadcn/ui components where possible
+- Keep dark mode as primary theme
+- Ensure light mode also looks polished
+
+IMPORTANT: Do not change the core functionality or data structure. Only improve the UI/UX, animations, interactivity, and visual polish. Maintain all existing features while making them more delightful to use.

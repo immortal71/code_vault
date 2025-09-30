@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { SnippetCard } from "@/components/snippet-card"
 import { SnippetEditor } from "@/components/snippet-editor"
 import { EmptyState } from "@/components/empty-state"
@@ -46,7 +46,9 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   return [storedValue, setValue] as const;
 }`,
     isFavorite: true,
-    createdAt: "2024-01-15T10:30:00Z"
+    createdAt: "2024-01-15T10:30:00Z",
+    usageCount: 24,
+    lastUsed: "2024-01-20T10:30:00Z"
   },
   {
     id: "2", 
@@ -77,7 +79,9 @@ class APIClient:
                     raise e
                 time.sleep(2 ** attempt)`,
     isFavorite: false,
-    createdAt: "2024-01-14T15:45:00Z"
+    createdAt: "2024-01-14T15:45:00Z",
+    usageCount: 12,
+    lastUsed: "2024-01-18T15:45:00Z"
   },
   {
     id: "3",
@@ -108,7 +112,9 @@ const debouncedSearch = debounce((query) => {
   console.log('Searching for:', query);
 }, 300);`,
     isFavorite: false,
-    createdAt: "2024-01-13T09:20:00Z"
+    createdAt: "2024-01-13T09:20:00Z",
+    usageCount: 8,
+    lastUsed: "2024-01-16T09:20:00Z"
   },
   {
     id: "4",
@@ -147,17 +153,26 @@ func (lw *loggedResponseWriter) WriteHeader(code int) {
     lw.ResponseWriter.WriteHeader(code)
 }`,
     isFavorite: true,
-    createdAt: "2024-01-12T14:20:00Z"
+    createdAt: "2024-01-12T14:20:00Z",
+    usageCount: 15,
+    lastUsed: "2024-01-19T14:20:00Z"
   }
 ]
 
 export default function MySnippets() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recent")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    const saved = localStorage.getItem('snippets-view-mode')
+    return (saved as "grid" | "list") || "grid"
+  })
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingSnippet, setEditingSnippet] = useState<typeof mockSnippets[0] | undefined>()
   const [snippets, setSnippets] = useState(mockSnippets)
+
+  useEffect(() => {
+    localStorage.setItem('snippets-view-mode', viewMode)
+  }, [viewMode])
 
   const filteredSnippets = snippets.filter(snippet => 
     snippet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

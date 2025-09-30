@@ -5,11 +5,28 @@
 A modern, AI-powered code snippet manager designed for developers to save, organize, search, and share code snippets with intelligent features. The application provides a clean, developer-focused interface with Monaco Editor integration for syntax highlighting and code editing.
 
 **Key Features:**
+- AI-powered auto-tagging and code analysis using OpenAI GPT-4
+- Semantic search with vector embeddings for intelligent snippet discovery
 - Organize code snippets with collections, tags, and favorites
 - Monaco Editor integration for VS Code-like editing experience
-- Search functionality with filtering by language and tags
+- Persistent PostgreSQL database with Drizzle ORM
 - Dashboard with statistics and language distribution visualization
 - Dark/light theme support with system preference detection
+
+## Recent Changes
+
+**September 30, 2025 - AI Features & Security Hardening:**
+- ✅ Implemented AI-powered code analysis and auto-tagging using OpenAI GPT-4
+- ✅ Added semantic search with vector embeddings (text-embedding-3-small)
+- ✅ Migrated from in-memory to persistent PostgreSQL database
+- ✅ Fixed critical security vulnerabilities:
+  - Route order bug (search route collision fixed)
+  - Unauthorized access prevention (ownership checks on all routes)
+  - Server-side user ID enforcement (no client manipulation)
+  - Privilege escalation prevention (field whitelisting on updates)
+- ✅ Integrated real API endpoints with React Query
+- ✅ Demo user auto-initialization on server startup
+- ⚠️ Note: Not production-ready without real authentication system
 
 ## User Preferences
 
@@ -54,25 +71,29 @@ Preferred communication style: Simple, everyday language.
 - Error handling middleware for consistent API responses
 
 **Data Layer:**
-- In-memory storage implementation (MemStorage class) for development
-- Prepared for database integration via IStorage interface
-- User model with username/password authentication structure
+- PostgreSQL persistent storage via DatabaseStorage class
+- IStorage interface for abstraction and testability
+- User model with UUID-based authentication
+- Demo user automatically created on server startup
 
 ### Database Design
 
 **ORM & Schema:**
 - Drizzle ORM for type-safe database operations
-- PostgreSQL as the target database (Neon serverless-compatible)
+- PostgreSQL (Neon serverless) for production
 - Schema-first approach with Drizzle-Zod integration for validation
 
 **Current Schema:**
-- Users table with UUID primary keys, username (unique), and password fields
-- Designed for extension with snippets, collections, tags, and favorites tables
+- Users table: UUID primary keys, username (unique), password
+- Snippets table: UUID primary keys, title, code, language, tags, framework, complexity, userId foreign key
+- Embeddings: Vector embeddings stored as JSON for semantic search
+- Security: All snippets scoped to userId with server-side ownership enforcement
 
 **Migration Strategy:**
-- Drizzle Kit for schema migrations (push command configured)
+- Drizzle Kit for schema migrations (push command)
 - Migrations stored in `/migrations` directory
-- Database URL configuration via environment variables
+- DATABASE_URL environment variable for connection
+- Auto-sync schema on server startup
 
 ### External Dependencies
 
@@ -93,6 +114,8 @@ Preferred communication style: Simple, everyday language.
 - TypeScript with strict mode enabled
 - Path aliases configured (@/ for client, @shared for shared code)
 
-**Planned Integrations:**
-- OpenAI API for code analysis, auto-tagging, and semantic search (referenced in design documents)
-- Vector storage for AI-powered snippet similarity (future enhancement)
+**AI Integrations:**
+- OpenAI GPT-4 for code analysis, explanation, and auto-tagging
+- OpenAI text-embedding-3-small for semantic search with vector embeddings
+- Cosine similarity algorithm for finding related snippets
+- Server-side embedding generation with automatic caching

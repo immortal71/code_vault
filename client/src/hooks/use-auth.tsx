@@ -1,23 +1,28 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User as SelectUser, InsertUser } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
+import { getQueryFn, apiRequest, queryClient, setAccessToken } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+type LoginData = Pick<InsertUser, "username" | "password">;
+
+type AuthResponse = {
+  accessToken: string;
+  user: SelectUser;
+};
 
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<AuthResponse, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  registerMutation: UseMutationResult<AuthResponse, Error, InsertUser>;
 };
-
-type LoginData = Pick<InsertUser, "username" | "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -28,20 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
   } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      const data = await res.json();
+      return data;
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+    onSuccess: (data: { accessToken: string; user: SelectUser }) => {
+      // Store access token in memory
+      setAccessToken(data.accessToken);
+      // Update user in cache
+      queryClient.setQueryData(["/api/auth/me"], data.user);
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${user.username}`,
+        description: `Logged in as ${data.user.username}`,
       });
     },
     onError: (error: Error) => {
@@ -55,14 +64,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
+      const res = await apiRequest("POST", "/api/auth/register", credentials);
+      const data = await res.json();
+      return data;
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+    onSuccess: (data: { accessToken: string; user: SelectUser }) => {
+      // Store access token in memory
+      setAccessToken(data.accessToken);
+      // Update user in cache
+      queryClient.setQueryData(["/api/auth/me"], data.user);
       toast({
         title: "Account created!",
-        description: `Welcome, ${user.username}!`,
+        description: `Welcome, ${data.user.username}!`,
       });
     },
     onError: (error: Error) => {
@@ -76,10 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      // Clear access token
+      setAccessToken(null);
+      // Clear user cache
+      queryClient.setQueryData(["/api/auth/me"], null);
       queryClient.clear();
       toast({
         title: "Logged out",

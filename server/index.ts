@@ -16,9 +16,8 @@ const config = getConfig();
 const app = express();
 
 // Trust proxy for accurate client IP (required for rate limiting behind proxy)
-if (config.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
+// Enable in all environments as Replit runs behind a proxy
+app.set('trust proxy', 1);
 
 // Disable X-Powered-By header
 app.disable('x-powered-by');

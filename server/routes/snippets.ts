@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { storage } from '../storage';
-import { insertSnippetSchema } from '@shared/schema';
+import { insertSnippetSchema, updateSnippetSchema } from '@shared/schema';
 import { generateEmbedding } from '../services/openaiService';
 import { requireAuth } from '../auth';
+import { ZodError } from 'zod';
 
 const router = Router();
 
@@ -35,13 +36,15 @@ router.get('/search', async (req, res) => {
     }
     
     if (useSemanticSearch) {
-      // Semantic search using embeddings
+      // Semantic search using embeddings with DB-level performance limits
       const queryEmbedding = await generateEmbedding(query);
-      const allSnippets = await storage.getSnippetsByUserId(userId);
+      
+      // Fetch only recent 1000 snippets from database (DB-level limit)
+      const snippetsToSearch = await storage.getRecentSnippetsForSearch(userId, 1000);
       
       const { cosineSimilarity } = await import('../services/openaiService');
       
-      const scoredSnippets = allSnippets
+      const scoredSnippets = snippetsToSearch
         .filter(s => s.embedding)
         .map(snippet => {
           const snippetEmbedding = JSON.parse(snippet.embedding!);
@@ -50,12 +53,13 @@ router.get('/search', async (req, res) => {
         })
         .filter(({ similarity }) => similarity > 0.7) // Threshold for relevance
         .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 50) // Return top 50 results
         .map(({ snippet }) => snippet);
       
       res.json(scoredSnippets);
     } else {
-      // Keyword search
-      const snippets = await storage.searchSnippets(userId, query);
+      // Keyword search with DB-level result limit
+      const snippets = await storage.searchSnippets(userId, query, 100);
       res.json(snippets);
     }
   } catch (error) {
@@ -111,6 +115,9 @@ router.post('/', async (req, res) => {
     
     res.status(201).json(snippet);
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     console.error('Create snippet error:', error);
     res.status(500).json({ error: 'Failed to create snippet' });
   }
@@ -131,25 +138,28 @@ router.put('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
     
-    // Regenerate embedding if code or description changed
+    // Validate update data - exclude userId and id from validation
+    const { userId: _, id: __, ...updateData } = req.body;
+    const validatedData = updateSnippetSchema.parse(updateData);
+    
+    // Regenerate embedding if code, title, or description changed
     let embedding = snippet.embedding;
-    if (req.body.code || req.body.description) {
-      const title = req.body.title || snippet.title;
-      const description = req.body.description || snippet.description || '';
-      const code = req.body.code || snippet.code;
+    if (validatedData.code || validatedData.description || validatedData.title) {
+      const title = validatedData.title || snippet.title;
+      const description = validatedData.description || snippet.description || '';
+      const code = validatedData.code || snippet.code;
       const embeddingText = `${title} ${description} ${code}`;
       const embeddingVector = await generateEmbedding(embeddingText);
       embedding = JSON.stringify(embeddingVector);
     }
     
-    // Only allow updating specific fields - prevent userId changes
-    const { title, description, code, language, tags, framework, complexity, isPublic, isFavorite } = req.body;
-    const updates = { title, description, code, language, tags, framework, complexity, isPublic, isFavorite, embedding };
-    
-    const updated = await storage.updateSnippet(req.params.id, updates);
+    const updated = await storage.updateSnippet(req.params.id, { ...validatedData, embedding });
     
     res.json(updated);
   } catch (error) {
+    if (error instanceof ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     console.error('Update snippet error:', error);
     res.status(500).json({ error: 'Failed to update snippet' });
   }

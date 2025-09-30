@@ -6,7 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, registerSchema, loginSchema } from "@shared/schema";
+import { ZodError } from "zod";
 
 declare global {
   namespace Express {
@@ -106,20 +107,9 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", authLimiter, async (req, res, next) => {
     try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password are required' });
-      }
-
-      // Basic username validation
-      if (username.length < 3 || username.length > 30) {
-        return res.status(400).json({ error: 'Username must be between 3 and 30 characters' });
-      }
-
-      if (password.length < 8) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
-      }
+      // Validate input with Zod schema
+      const validatedData = registerSchema.parse(req.body);
+      const { username, password } = validatedData;
 
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
@@ -143,11 +133,23 @@ export function setupAuth(app: Express) {
         });
       });
     } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
       next(error);
     }
   });
 
   app.post("/api/login", loginLimiter, (req, res, next) => {
+    try {
+      // Validate input with Zod schema
+      loginSchema.parse(req.body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors[0].message });
+      }
+    }
+
     passport.authenticate("local", (err: Error, user: SelectUser, info: { message: string }) => {
       if (err) return next(err);
       if (!user) {

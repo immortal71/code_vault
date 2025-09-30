@@ -16,10 +16,11 @@ export interface IStorage {
   // Snippet methods
   getSnippet(id: string): Promise<Snippet | undefined>;
   getSnippetsByUserId(userId: string): Promise<Snippet[]>;
+  getRecentSnippetsForSearch(userId: string, limit: number): Promise<Snippet[]>;
   createSnippet(snippet: InsertSnippet): Promise<Snippet>;
   updateSnippet(id: string, snippet: Partial<Snippet>): Promise<Snippet | undefined>;
   deleteSnippet(id: string): Promise<boolean>;
-  searchSnippets(userId: string, query: string): Promise<Snippet[]>;
+  searchSnippets(userId: string, query: string, limit?: number): Promise<Snippet[]>;
   
   // Collection methods
   getCollection(id: string): Promise<Collection | undefined>;
@@ -118,9 +119,16 @@ export class MemStorage implements IStorage {
     return this.snippets.delete(id);
   }
 
-  async searchSnippets(userId: string, query: string): Promise<Snippet[]> {
-    const lowerQuery = query.toLowerCase();
+  async getRecentSnippetsForSearch(userId: string, limit: number): Promise<Snippet[]> {
     return Array.from(this.snippets.values())
+      .filter(snippet => snippet.userId === userId)
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .slice(0, limit);
+  }
+
+  async searchSnippets(userId: string, query: string, limit?: number): Promise<Snippet[]> {
+    const lowerQuery = query.toLowerCase();
+    const results = Array.from(this.snippets.values())
       .filter(snippet => 
         snippet.userId === userId && (
           snippet.title.toLowerCase().includes(lowerQuery) ||
@@ -129,6 +137,8 @@ export class MemStorage implements IStorage {
           snippet.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
         )
       );
+    
+    return limit ? results.slice(0, limit) : results;
   }
 
   async getCollection(id: string): Promise<Collection | undefined> {
@@ -214,6 +224,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(sql`${snippets.createdAt} DESC`);
   }
 
+  async getRecentSnippetsForSearch(userId: string, limit: number): Promise<Snippet[]> {
+    return await db.select()
+      .from(snippets)
+      .where(eq(snippets.userId, userId))
+      .orderBy(sql`${snippets.createdAt} DESC`)
+      .limit(limit);
+  }
+
   async createSnippet(insertSnippet: InsertSnippet): Promise<Snippet> {
     const [snippet] = await db.insert(snippets).values(insertSnippet).returning();
     return snippet;
@@ -232,9 +250,9 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount !== null && result.rowCount > 0;
   }
 
-  async searchSnippets(userId: string, query: string): Promise<Snippet[]> {
+  async searchSnippets(userId: string, query: string, limit?: number): Promise<Snippet[]> {
     const lowerQuery = `%${query.toLowerCase()}%`;
-    return await db.select()
+    const queryBuilder = db.select()
       .from(snippets)
       .where(
         and(
@@ -245,7 +263,14 @@ export class DatabaseStorage implements IStorage {
             sql`LOWER(${snippets.code}) LIKE ${lowerQuery}`
           )
         )
-      );
+      )
+      .orderBy(sql`${snippets.createdAt} DESC`); // Consistent ordering
+    
+    if (limit) {
+      return await queryBuilder.limit(limit);
+    }
+    
+    return await queryBuilder;
   }
 
   async getCollection(id: string): Promise<Collection | undefined> {

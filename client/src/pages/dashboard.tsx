@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
+import { useQuery } from "@tanstack/react-query"
 import { StatsCard } from "@/components/stats-card"
 import { LanguageChart } from "@/components/language-chart"
 import { SnippetCard } from "@/components/snippet-card"
@@ -9,6 +10,7 @@ import { SiReact, SiPython, SiJavascript, SiTypescript, SiGo, SiRust, SiCplusplu
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Snippet } from "@shared/schema"
 
 // todo: remove mock functionality
 const mockSnippets = [
@@ -134,8 +136,26 @@ export default function Dashboard() {
   const { toast } = useToast()
   const [hoveredSnippet, setHoveredSnippet] = useState<string | null>(null)
 
-  const recentSnippets = mockSnippets.slice(0, 3)
-  const favoriteSnippets = mockSnippets.filter(s => s.isFavorite)
+  // Fetch real snippets from API
+  const { data: snippets = [], isLoading } = useQuery<Snippet[]>({
+    queryKey: ['/api/snippets'],
+  })
+
+  // Compute data from real snippets
+  const recentSnippets = snippets.slice(0, 3)
+  const favoriteSnippets = snippets.filter(s => s.isFavorite)
+  
+  // Compute language data from snippets
+  const languageCounts = snippets.reduce((acc, snippet) => {
+    acc[snippet.language] = (acc[snippet.language] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  
+  const languageData = Object.entries(languageCounts).map(([name, value]) => ({
+    name,
+    value,
+    color: languageColors[name.toLowerCase()] || '#6B7280'
+  }))
 
   const handleCreateSnippet = () => {
     console.log('Create new snippet clicked')
@@ -150,8 +170,10 @@ export default function Dashboard() {
     })
   }
 
-  const getDaysAgo = (date: string) => {
-    const days = Math.floor((Date.now() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))
+  const getDaysAgo = (date: Date | string | null) => {
+    if (!date) return 'Unknown'
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    const days = Math.floor((Date.now() - dateObj.getTime()) / (1000 * 60 * 60 * 24))
     if (days === 0) return 'Today'
     if (days === 1) return '1 day ago'
     return `${days} days ago`
@@ -218,7 +240,7 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Snippets"
-          value={mockSnippets.length}
+          value={snippets.length}
           icon={Code2}
           trend={{ value: 12, isPositive: true }}
           onClick={() => setLocation('/snippets')}
@@ -239,7 +261,7 @@ export default function Dashboard() {
         />
         <StatsCard
           title="Languages"
-          value={mockLanguageData.length}
+          value={languageData.length}
           description="Different technologies"
           icon={TrendingUp}
           onClick={() => setLocation('/snippets')}
@@ -254,7 +276,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <LanguageChart 
-              data={mockLanguageData}
+              data={languageData}
               onLanguageClick={(language) => {
                 console.log('Navigate to snippets filtered by:', language)
                 setLocation('/snippets')

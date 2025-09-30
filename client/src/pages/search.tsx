@@ -113,6 +113,7 @@ const mockTags = [
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [semanticSearch, setSemanticSearch] = useState(false)
   const [filters, setFilters] = useState({
     languages: [] as string[],
     tags: [] as string[],
@@ -160,9 +161,10 @@ export default function SearchPage() {
     }
   })
 
-  const handleSearch = (query: string) => {
+  const handleSearch = (query: string, useSemanticSearch?: boolean) => {
     setSearchQuery(query)
-    console.log('Search triggered:', query)
+    setSemanticSearch(useSemanticSearch || false)
+    console.log('Search triggered:', { query, semantic: useSemanticSearch })
   }
 
   const handleFiltersChange = (newFilters: typeof filters) => {
@@ -296,10 +298,16 @@ export default function SearchPage() {
         {/* Results */}
         <div className="flex-1">
           {searchQuery && (
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <p className="text-sm text-muted-foreground">
                 {sortedSnippets.length} result{sortedSnippets.length !== 1 ? 's' : ''} for "{searchQuery}"
               </p>
+              {semanticSearch && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  <Search className="h-3 w-3" />
+                  AI Search
+                </Badge>
+              )}
             </div>
           )}
 

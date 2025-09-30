@@ -1,4 +1,4 @@
-import { Search, Command, X, Clock, Code2, BookOpen, Hash } from "lucide-react"
+import { Search, Command, X, Clock, Code2, BookOpen, Hash, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useState, useEffect, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 
 interface SearchBarProps {
   placeholder?: string
-  onSearch?: (query: string) => void
+  onSearch?: (query: string, semanticSearch?: boolean) => void
   className?: string
   showDropdown?: boolean
 }
@@ -36,6 +36,7 @@ export function SearchBar({
   const [searchQuery, setSearchQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
+  const [semanticSearch, setSemanticSearch] = useState(false)
   const [recentSearches, setRecentSearches] = useState(['react hooks', 'python api', 'javascript utils'])
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -48,8 +49,16 @@ export function SearchBar({
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
-    onSearch?.(value)
+    onSearch?.(value, semanticSearch)
     setIsOpen(true)
+  }
+
+  const toggleSemanticSearch = () => {
+    const newValue = !semanticSearch
+    setSemanticSearch(newValue)
+    if (searchQuery) {
+      onSearch?.(searchQuery, newValue)
+    }
   }
 
   const handleSelectSuggestion = (suggestion: SearchSuggestion) => {
@@ -126,7 +135,7 @@ export function SearchBar({
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => { setIsFocused(true); setIsOpen(true) }}
           onBlur={() => setIsFocused(false)}
-          className={`pl-9 pr-20 h-11 transition-all duration-200 ${
+          className={`pl-9 pr-32 h-11 transition-all duration-200 ${
             isFocused 
               ? 'ring-2 ring-primary shadow-lg' 
               : 'shadow-sm hover:shadow-md'
@@ -138,20 +147,34 @@ export function SearchBar({
           aria-autocomplete="list"
           role="combobox"
         />
-        {searchQuery && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={clearSearch}
+              className="h-6 w-6"
+              aria-label="Clear search"
+              data-testid="button-clear-search"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={clearSearch}
-            className="absolute right-14 top-1/2 -translate-y-1/2 h-6 w-6 z-10"
-            aria-label="Clear search"
+            variant={semanticSearch ? "default" : "ghost"}
+            size="sm"
+            onClick={toggleSemanticSearch}
+            className="h-7 px-2 gap-1"
+            title={semanticSearch ? "Using AI semantic search" : "Using keyword search"}
+            data-testid="button-toggle-semantic"
           >
-            <X className="h-3 w-3" />
+            <Sparkles className={`h-3 w-3 ${semanticSearch ? '' : 'text-muted-foreground'}`} />
+            <span className="text-xs">AI</span>
           </Button>
-        )}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs text-muted-foreground font-medium border border-border">
-          <Command className="h-3 w-3" />
-          <span>K</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs text-muted-foreground font-medium border border-border">
+            <Command className="h-3 w-3" />
+            <span>K</span>
+          </div>
         </div>
       </div>
 

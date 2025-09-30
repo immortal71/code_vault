@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -36,7 +37,29 @@ app.use((req, res, next) => {
   next();
 });
 
+// Initialize demo user for development
+async function initializeDemoUser() {
+  try {
+    let demoUser = await storage.getUserByUsername("demo");
+    if (!demoUser) {
+      demoUser = await storage.createUser({
+        username: "demo",
+        password: "demo123", // In production, this would be hashed
+      });
+      log(`Demo user created with ID: ${demoUser.id}`);
+    }
+    return demoUser.id;
+  } catch (error) {
+    log(`Error initializing demo user: ${error}`);
+    // Return a fallback ID if user creation fails
+    return "demo-user";
+  }
+}
+
 (async () => {
+  // Initialize demo user
+  await initializeDemoUser();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

@@ -1,5 +1,7 @@
-import { type User, type InsertUser, type Snippet, type InsertSnippet, type Collection, type InsertCollection } from "@shared/schema";
+import { type User, type InsertUser, type Snippet, type InsertSnippet, type Collection, type InsertCollection, users, snippets, collections } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, and, or, like, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -160,4 +162,98 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async getSnippet(id: string): Promise<Snippet | undefined> {
+    const [snippet] = await db.select().from(snippets).where(eq(snippets.id, id));
+    return snippet;
+  }
+
+  async getSnippetsByUserId(userId: string): Promise<Snippet[]> {
+    return await db.select()
+      .from(snippets)
+      .where(eq(snippets.userId, userId))
+      .orderBy(sql`${snippets.createdAt} DESC`);
+  }
+
+  async createSnippet(insertSnippet: InsertSnippet): Promise<Snippet> {
+    const [snippet] = await db.insert(snippets).values(insertSnippet).returning();
+    return snippet;
+  }
+
+  async updateSnippet(id: string, updates: Partial<Snippet>): Promise<Snippet | undefined> {
+    const [snippet] = await db.update(snippets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(snippets.id, id))
+      .returning();
+    return snippet;
+  }
+
+  async deleteSnippet(id: string): Promise<boolean> {
+    const result = await db.delete(snippets).where(eq(snippets.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  async searchSnippets(userId: string, query: string): Promise<Snippet[]> {
+    const lowerQuery = `%${query.toLowerCase()}%`;
+    return await db.select()
+      .from(snippets)
+      .where(
+        and(
+          eq(snippets.userId, userId),
+          or(
+            sql`LOWER(${snippets.title}) LIKE ${lowerQuery}`,
+            sql`LOWER(${snippets.description}) LIKE ${lowerQuery}`,
+            sql`LOWER(${snippets.code}) LIKE ${lowerQuery}`
+          )
+        )
+      );
+  }
+
+  async getCollection(id: string): Promise<Collection | undefined> {
+    const [collection] = await db.select().from(collections).where(eq(collections.id, id));
+    return collection;
+  }
+
+  async getCollectionsByUserId(userId: string): Promise<Collection[]> {
+    return await db.select()
+      .from(collections)
+      .where(eq(collections.userId, userId))
+      .orderBy(sql`${collections.createdAt} DESC`);
+  }
+
+  async createCollection(insertCollection: InsertCollection): Promise<Collection> {
+    const [collection] = await db.insert(collections).values(insertCollection).returning();
+    return collection;
+  }
+
+  async updateCollection(id: string, updates: Partial<Collection>): Promise<Collection | undefined> {
+    const [collection] = await db.update(collections)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(collections.id, id))
+      .returning();
+    return collection;
+  }
+
+  async deleteCollection(id: string): Promise<boolean> {
+    const result = await db.delete(collections).where(eq(collections.id, id));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+}
+
+// Use database storage instead of in-memory storage
+export const storage = new DatabaseStorage();

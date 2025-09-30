@@ -5,12 +5,24 @@ import { generateEmbedding } from '../services/openaiService';
 
 const router = Router();
 
+// Get or create demo user
+async function getDemoUserId(): Promise<string> {
+  let user = await storage.getUserByUsername("demo");
+  if (!user) {
+    user = await storage.createUser({
+      username: "demo",
+      password: "demo123",
+    });
+  }
+  return user.id;
+}
+
 // GET /api/snippets - Get all snippets for a user
 router.get('/', async (req, res) => {
   try {
-    // For demo purposes, using a mock user ID
+    // For demo purposes, using the demo user
     // In production, get from authenticated session
-    const userId = req.query.userId as string || 'demo-user';
+    const userId = await getDemoUserId();
     
     const snippets = await storage.getSnippetsByUserId(userId);
     res.json(snippets);
@@ -114,7 +126,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const query = req.query.q as string;
-    const userId = req.query.userId as string || 'demo-user';
+    const userId = await getDemoUserId();
     const useSemanticSearch = req.query.semantic === 'true';
     
     if (!query) {

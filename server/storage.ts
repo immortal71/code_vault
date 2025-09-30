@@ -2,6 +2,10 @@ import { type User, type InsertUser, type Snippet, type InsertSnippet, type Coll
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, and, or, like, sql } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import createMemoryStore from "memorystore";
+import { pool } from "./db";
 
 export interface IStorage {
   // User methods
@@ -23,17 +27,26 @@ export interface IStorage {
   createCollection(collection: InsertCollection): Promise<Collection>;
   updateCollection(id: string, collection: Partial<Collection>): Promise<Collection | undefined>;
   deleteCollection(id: string): Promise<boolean>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
+
+const MemoryStore = createMemoryStore(session);
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private snippets: Map<string, Snippet>;
   private collections: Map<string, Collection>;
+  public sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
     this.snippets = new Map();
     this.collections = new Map();
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000,
+    });
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -162,7 +175,18 @@ export class MemStorage implements IStorage {
   }
 }
 
+const PostgresSessionStore = connectPg(session);
+
 export class DatabaseStorage implements IStorage {
+  public sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+    });
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;

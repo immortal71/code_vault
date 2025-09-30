@@ -2,27 +2,17 @@ import { Router } from 'express';
 import { storage } from '../storage';
 import { insertSnippetSchema } from '@shared/schema';
 import { generateEmbedding } from '../services/openaiService';
+import { requireAuth } from '../auth';
 
 const router = Router();
 
-// Get or create demo user
-async function getDemoUserId(): Promise<string> {
-  let user = await storage.getUserByUsername("demo");
-  if (!user) {
-    user = await storage.createUser({
-      username: "demo",
-      password: "demo123",
-    });
-  }
-  return user.id;
-}
+// All routes require authentication
+router.use(requireAuth);
 
 // GET /api/snippets - Get all snippets for a user
 router.get('/', async (req, res) => {
   try {
-    // For demo purposes, using the demo user
-    // In production, get from authenticated session
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     
     const snippets = await storage.getSnippetsByUserId(userId);
     res.json(snippets);
@@ -37,7 +27,7 @@ router.get('/', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const query = req.query.q as string;
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     const useSemanticSearch = req.query.semantic === 'true';
     
     if (!query) {
@@ -77,7 +67,7 @@ router.get('/search', async (req, res) => {
 // GET /api/snippets/:id - Get single snippet
 router.get('/:id', async (req, res) => {
   try {
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     const snippet = await storage.getSnippet(req.params.id);
     
     if (!snippet) {
@@ -100,7 +90,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // Enforce server-side userId - never trust client
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     
     // Validate request body (without userId from client)
     const { userId: _, ...bodyWithoutUserId } = req.body;
@@ -129,7 +119,7 @@ router.post('/', async (req, res) => {
 // PUT /api/snippets/:id - Update snippet
 router.put('/:id', async (req, res) => {
   try {
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     const snippet = await storage.getSnippet(req.params.id);
     
     if (!snippet) {
@@ -168,7 +158,7 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/snippets/:id - Delete snippet
 router.delete('/:id', async (req, res) => {
   try {
-    const userId = await getDemoUserId();
+    const userId = req.user!.id;
     const snippet = await storage.getSnippet(req.params.id);
     
     if (!snippet) {

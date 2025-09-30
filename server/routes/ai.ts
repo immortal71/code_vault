@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { analyzeCode, explainCode, generateEmbedding } from '../services/openaiService';
+import { requireAuth } from '../auth';
 
 const router = Router();
+
+// All AI routes require authentication
+router.use(requireAuth);
 
 // POST /api/ai/analyze - Analyze code and return tags/description
 router.post('/analyze', async (req, res) => {

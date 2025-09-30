@@ -8,62 +8,78 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SearchBar } from "@/components/search-bar";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import MySnippets from "@/pages/my-snippets";
 import Collections from "@/pages/collections";
 import SearchPage from "@/pages/search";
 import Settings from "@/pages/settings";
+import AuthPage from "@/pages/auth-page";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/snippets" component={MySnippets} />
-      <Route path="/collections" component={Collections} />
-      <Route path="/search" component={SearchPage} />
-      <Route path="/settings" component={Settings} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
-function App() {
+function AppLayout() {
   const style = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
   };
 
   return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+            <SidebarTrigger data-testid="button-sidebar-toggle" className="md:hidden" />
+            
+            <div className="flex-1 flex justify-center px-4">
+              <SearchBar 
+                placeholder="Search snippets... ⌘K"
+                className="w-full max-w-[500px]"
+              />
+            </div>
+            
+            <ThemeToggle />
+          </header>
+          
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-6">
+              <Switch>
+                <ProtectedRoute path="/" component={Dashboard} />
+                <ProtectedRoute path="/snippets" component={MySnippets} />
+                <ProtectedRoute path="/collections" component={Collections} />
+                <ProtectedRoute path="/search" component={SearchPage} />
+                <ProtectedRoute path="/settings" component={Settings} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <Route>
+        <AppLayout />
+      </Route>
+    </Switch>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider defaultTheme="dark">
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 overflow-hidden">
-                <header className="flex items-center justify-between px-6 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" className="md:hidden" />
-                  
-                  <div className="flex-1 flex justify-center px-4">
-                    <SearchBar 
-                      placeholder="Search snippets... ⌘K"
-                      className="w-full max-w-[500px]"
-                    />
-                  </div>
-                  
-                  <ThemeToggle />
-                </header>
-                
-                <main className="flex-1 overflow-auto">
-                  <div className="container mx-auto px-6 py-6">
-                    <Router />
-                  </div>
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
-          <Toaster />
+          <AuthProvider>
+            <Router />
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>

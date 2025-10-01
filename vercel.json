@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "vite build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": null,

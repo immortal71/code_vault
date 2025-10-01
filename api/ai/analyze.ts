@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { setCorsHeaders } from '../_lib/cors';
-import { handleError, unauthorized, badRequest } from '../_lib/errors';
-import { requireAuth } from '../_lib/jwt';
-import { validateBody } from '../_lib/validate';
-import { analyzeCode } from '../../server/services/openaiService';
+import { setCorsHeaders } from '../_lib/cors.js';
+import { handleError, unauthorized, badRequest } from '../_lib/errors.js';
+import { requireAuth } from '../_lib/jwt.js';
+import { validateBody } from '../_lib/validate.js';
+import { analyzeCode } from '../../server/services/openaiService.js';
 import { z } from 'zod';
 
 const analyzeSchema = z.object({

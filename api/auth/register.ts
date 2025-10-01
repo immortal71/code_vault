@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../_lib/db';
-import { users } from '../../shared/schema';
-import { setCorsHeaders } from '../_lib/cors';
-import { handleError, badRequest, conflict } from '../_lib/errors';
-import { validateBody } from '../_lib/validate';
-import { hashPassword, generateAccessToken, generateRefreshToken, hashRefreshToken, setRefreshTokenCookie } from '../_lib/jwt';
+import { db } from '../_lib/db.js';
+import { users } from '../../shared/schema.js';
+import { setCorsHeaders } from '../_lib/cors.js';
+import { handleError, badRequest, conflict } from '../_lib/errors.js';
+import { validateBody } from '../_lib/validate.js';
+import { hashPassword, generateAccessToken, generateRefreshToken, hashRefreshToken, setRefreshTokenCookie } from '../_lib/jwt.js';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 

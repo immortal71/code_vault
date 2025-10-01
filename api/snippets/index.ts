@@ -1,13 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../_lib/db';
-import { snippets } from '../../shared/schema';
-import { insertSnippetSchema } from '../../shared/schema';
-import { setCorsHeaders } from '../_lib/cors';
-import { handleError, unauthorized } from '../_lib/errors';
-import { validateBody } from '../_lib/validate';
-import { requireAuth } from '../_lib/jwt';
+import { db } from '../_lib/db.js';
+import { snippets } from '../../shared/schema.js';
+import { insertSnippetSchema } from '../../shared/schema.js';
+import { setCorsHeaders } from '../_lib/cors.js';
+import { handleError, unauthorized } from '../_lib/errors.js';
+import { validateBody } from '../_lib/validate.js';
+import { requireAuth } from '../_lib/jwt.js';
 import { eq, desc } from 'drizzle-orm';
-import { generateEmbedding } from '../../server/services/openaiService';
+import { generateEmbedding } from '../../server/services/openaiService.js';
 
 export default async function handler(
   req: VercelRequest,

@@ -1,8 +1,6 @@
 {
-  "buildCommand": "vite build",
-  "buildCommand": "npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+  "framework": "vite",
   "installCommand": "npm install",
-  "framework": null,
   "outputDirectory": "dist/public",
   "rewrites": [
     {
@@ -53,8 +51,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
